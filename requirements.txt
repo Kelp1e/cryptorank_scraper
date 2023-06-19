@@ -1,0 +1,15 @@
+beautifulsoup4==4.12.2
+certifi==2023.5.7
+charset-normalizer==3.1.0
+cloudscraper==1.2.71
+greenlet==2.0.2
+idna==3.4
+psycopg2-binary==2.9.6
+pyparsing==3.0.9
+python-dotenv==1.0.0
+requests==2.31.0
+requests-toolbelt==1.0.0
+soupsieve==2.4.1
+SQLAlchemy==2.0.16
+typing_extensions==4.6.3
+urllib3==2.0.3
