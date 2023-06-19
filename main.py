@@ -3,7 +3,7 @@ from datetime import date
 
 from cloudscraper import create_scraper
 
-from db.models import SaleToken
+from db.models import SaleToken, Launchpad, SaleTokenLaunchpad
 from db.setup import create_session
 from request_data import headers, json_data
 
@@ -12,6 +12,10 @@ scraper = create_scraper()
 UPCOMING_API = "https://api.cryptorank.io/v0/round/upcoming"
 ACTIVE_API = "https://api.cryptorank.io/v0/round/active"
 PAST_API = "https://api.cryptorank.io/v0/round/past"
+
+UPCOMING_STATUS = "upcoming"
+ACTIVE_STATUS = "active"
+PAST_STATUS = "past"
 
 
 def get_date():
@@ -65,31 +69,85 @@ def get_value(d, value):
     return None
 
 
-def load_data(page, page_type):
+def load_pages(page, page_type):
     session = create_session()
     s = session()
 
     status = page_type
 
     for token in page:
-        sale_token = SaleToken(
-            status=status,
-            is_sponsored=get_value(token, "isSponsored"),
-            name=get_value(token, "name"),
-            key=get_value(token, "key"),
-            symbol=get_value(token, "symbol"),
-            image=get_value(token, "image"),
-            category=get_value(get_value(token, "category"), "key"),
-            initial_cap=get_value(token, "initialCap"),
-            raise_amount=get_value(token, "raise"),
-            till=get_value(token, "till"),
-            total_raise=get_value(token, "totalRaise"),
-            roi=get_value(token, "roi"),
-            ath_roi=get_value(token, "athRoi"),
-            sale_price=get_value(token, "salePrice"),
-        )
-        s.add(sale_token)
-        s.commit()
+        token_key = get_value(token, "key")
+        sale_token = s.query(SaleToken).filter_by(key=token_key).first()
+
+        if sale_token:
+            sale_token.status = status
+            sale_token.is_sponsored = get_value(token, "isSponsored")
+            sale_token.name = get_value(token, "name")
+            sale_token.symbol = get_value(token, "symbol")
+            sale_token.image = get_value(token, "image")
+            sale_token.category = get_value(get_value(token, "category"), "key")
+            sale_token.initial_cap = get_value(token, "initialCap")
+            sale_token.raise_amount = get_value(token, "raise")
+            sale_token.till = get_value(token, "till")
+            sale_token.total_raise = get_value(token, "totalRaise")
+            sale_token.roi = get_value(token, "roi")
+            sale_token.ath_roi = get_value(token, "athRoi")
+            sale_token.sale_price = get_value(token, "salePrice")
+        else:
+            sale_token = SaleToken(
+                status=status,
+                is_sponsored=get_value(token, "isSponsored"),
+                name=get_value(token, "name"),
+                key=token_key,
+                symbol=get_value(token, "symbol"),
+                image=get_value(token, "image"),
+                category=get_value(get_value(token, "category"), "key"),
+                initial_cap=get_value(token, "initialCap"),
+                raise_amount=get_value(token, "raise"),
+                till=get_value(token, "till"),
+                total_raise=get_value(token, "totalRaise"),
+                roi=get_value(token, "roi"),
+                ath_roi=get_value(token, "athRoi"),
+                sale_price=get_value(token, "salePrice"),
+            )
+
+            s.add(sale_token)
+            s.commit()
+
+        launchpads_data = get_value(token, "launchpads")
+        for launchpads_item in launchpads_data:
+            if launchpads_item:
+                launchpads_key = get_value(launchpads_item, "key")
+                launchpad = s.query(Launchpad).filter_by(key=launchpads_key).first()
+                if launchpad:
+                    launchpad.key = launchpads_key
+                    launchpad.name = get_value(launchpads_item, "name")
+                    launchpad.image = get_value(launchpads_item, "image")
+                else:
+                    launchpad = Launchpad(
+                        key=launchpads_key,
+                        name=get_value(launchpads_item, "name"),
+                        image=get_value(launchpads_item, "image"),
+                    )
+                s.add(launchpad)
+                s.commit()
+
+                sale_token_launchpad = (
+                    s.query(SaleTokenLaunchpad)
+                    .filter_by(sale_token_id=sale_token.id, launchpad_id=launchpad.id)
+                    .first()
+                )
+
+                if not sale_token_launchpad:
+                    sale_token_launchpad = SaleTokenLaunchpad(
+                        sale_token_id=sale_token.id, launchpad_id=launchpad.id
+                    )
+                    s.add(sale_token_launchpad)
+                    s.commit()
+
+
+def load_data(page, page_type):
+    load_pages(page, page_type)
 
 
 def main():
@@ -97,9 +155,9 @@ def main():
     active_page = get_page_data(ACTIVE_API, headers, json_data)["data"]
     past_page = get_page_data(PAST_API, headers, json_data)["data"]
 
-    load_data(upcoming_page, "upcoming")
-    load_data(active_page, "active")
-    load_data(past_page, "past")
+    load_data(upcoming_page, UPCOMING_STATUS)
+    load_data(active_page, ACTIVE_STATUS)
+    load_data(past_page, PAST_STATUS)
 
 
 if __name__ == "__main__":

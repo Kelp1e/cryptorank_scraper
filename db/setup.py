@@ -14,7 +14,7 @@ DB_NAME = os.getenv("DB_NAME")
 def get_engine():
     engine = create_engine(
         f"postgresql+psycopg2://{DB_USERNAME}:{DB_PASSWORD}@localhost:5432/{DB_NAME}",
-        echo=True,
+        echo=False,
     )
 
     return engine
