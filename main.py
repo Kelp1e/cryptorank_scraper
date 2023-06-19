@@ -3,8 +3,8 @@ from datetime import date
 
 from cloudscraper import create_scraper
 
-from db.models import SaleToken, Launchpad
-from db.setup import get_engine, create_session
+from db.models import SaleToken
+from db.setup import create_session
 from request_data import headers, json_data
 
 scraper = create_scraper()
@@ -88,7 +88,6 @@ def load_data(page, page_type):
             ath_roi=get_value(token, "athRoi"),
             sale_price=get_value(token, "salePrice"),
         )
-        print(get_value(token, "launchpads"))
         s.add(sale_token)
         s.commit()
 
@@ -98,13 +97,10 @@ def main():
     active_page = get_page_data(ACTIVE_API, headers, json_data)["data"]
     past_page = get_page_data(PAST_API, headers, json_data)["data"]
 
-    # load_data(upcoming_page, "upcoming")
+    load_data(upcoming_page, "upcoming")
     load_data(active_page, "active")
-    # load_data(past_page, "past")
+    load_data(past_page, "past")
 
 
 if __name__ == "__main__":
     main()
-
-# 394 with isinstance
-# 223 with AttributeError

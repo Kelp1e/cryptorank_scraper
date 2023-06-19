@@ -15,6 +15,7 @@ Base = declarative_base()
 #     image = Column(String)
 #
 
+
 class SaleToken(Base):
     __tablename__ = "sale_tokens"
 
