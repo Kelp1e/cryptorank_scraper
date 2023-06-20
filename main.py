@@ -3,7 +3,7 @@ from datetime import date
 
 from cloudscraper import create_scraper
 
-from db.models import SaleToken, Launchpad, SaleTokenLaunchpad
+from db.models import SaleToken, Launchpad, SaleTokenLaunchpad, Fund, SaleTokenFund
 from db.setup import create_session
 from request_data import headers, json_data
 
@@ -76,58 +76,76 @@ def load_pages(page, page_type):
     status = page_type
 
     for token in page:
+        # Sale Token
+        is_sponsored = get_value(token, "isSponsored")
+        name = get_value(token, "name")
         token_key = get_value(token, "key")
+        symbol = get_value(token, "symbol")
+        image = get_value(token, "image")
+        category = get_value(get_value(token, "category"), "key")
+        initial_cap = get_value(token, "initialCap")
+        raise_amount = get_value(token, "raise")
+        till = get_value(token, "till")
+        total_raise = get_value(token, "total_raise")
+        roi = get_value(token, "roi")
+        ath_roi = get_value(token, "athRoi")
+        sale_price = get_value(token, "salePrice")
+
         sale_token = s.query(SaleToken).filter_by(key=token_key).first()
 
         if sale_token:
             sale_token.status = status
-            sale_token.is_sponsored = get_value(token, "isSponsored")
-            sale_token.name = get_value(token, "name")
-            sale_token.symbol = get_value(token, "symbol")
-            sale_token.image = get_value(token, "image")
-            sale_token.category = get_value(get_value(token, "category"), "key")
-            sale_token.initial_cap = get_value(token, "initialCap")
-            sale_token.raise_amount = get_value(token, "raise")
-            sale_token.till = get_value(token, "till")
-            sale_token.total_raise = get_value(token, "totalRaise")
-            sale_token.roi = get_value(token, "roi")
-            sale_token.ath_roi = get_value(token, "athRoi")
-            sale_token.sale_price = get_value(token, "salePrice")
+            sale_token.is_sponsored = is_sponsored
+            sale_token.name = name
+            sale_token.symbol = symbol
+            sale_token.image = image
+            sale_token.category = category
+            sale_token.initial_cap = initial_cap
+            sale_token.raise_amount = raise_amount
+            sale_token.till = till
+            sale_token.total_raise = total_raise
+            sale_token.roi = roi
+            sale_token.ath_roi = ath_roi
+            sale_token.sale_price = sale_price
         else:
             sale_token = SaleToken(
                 status=status,
-                is_sponsored=get_value(token, "isSponsored"),
-                name=get_value(token, "name"),
+                is_sponsored=is_sponsored,
+                name=name,
                 key=token_key,
-                symbol=get_value(token, "symbol"),
-                image=get_value(token, "image"),
-                category=get_value(get_value(token, "category"), "key"),
-                initial_cap=get_value(token, "initialCap"),
-                raise_amount=get_value(token, "raise"),
-                till=get_value(token, "till"),
-                total_raise=get_value(token, "totalRaise"),
-                roi=get_value(token, "roi"),
-                ath_roi=get_value(token, "athRoi"),
-                sale_price=get_value(token, "salePrice"),
+                symbol=symbol,
+                image=image,
+                category=category,
+                initial_cap=initial_cap,
+                raise_amount=raise_amount,
+                till=till,
+                total_raise=total_raise,
+                roi=roi,
+                ath_roi=ath_roi,
+                sale_price=sale_price,
             )
 
             s.add(sale_token)
             s.commit()
 
+        # Launchpads
         launchpads_data = get_value(token, "launchpads")
         for launchpads_item in launchpads_data:
             if launchpads_item:
-                launchpads_key = get_value(launchpads_item, "key")
-                launchpad = s.query(Launchpad).filter_by(key=launchpads_key).first()
+                launchpad_key = get_value(launchpads_item, "key")
+                launchpad_name = get_value(launchpads_item, "name")
+                launchpad_image = get_value(launchpads_item, "image")
+
+                launchpad = s.query(Launchpad).filter_by(key=launchpad_key).first()
                 if launchpad:
-                    launchpad.key = launchpads_key
-                    launchpad.name = get_value(launchpads_item, "name")
-                    launchpad.image = get_value(launchpads_item, "image")
+                    launchpad.key = launchpad_key
+                    launchpad.name = launchpad_name
+                    launchpad.image = launchpad_image
                 else:
                     launchpad = Launchpad(
-                        key=launchpads_key,
-                        name=get_value(launchpads_item, "name"),
-                        image=get_value(launchpads_item, "image"),
+                        key=launchpad_key,
+                        name=launchpad_name,
+                        image=launchpad_image,
                     )
                 s.add(launchpad)
                 s.commit()
@@ -138,11 +156,53 @@ def load_pages(page, page_type):
                     .first()
                 )
 
-                if not sale_token_launchpad:
+                if sale_token_launchpad:
+                    sale_token_launchpad.sale_token_id = sale_token.id
+                    sale_token_launchpad.launchpad_id = launchpad.id
+                else:
                     sale_token_launchpad = SaleTokenLaunchpad(
                         sale_token_id=sale_token.id, launchpad_id=launchpad.id
                     )
                     s.add(sale_token_launchpad)
+                    s.commit()
+
+        funds_data = get_value(token, "funds")
+        for funds_item in funds_data:
+            if funds_item:
+                fund_key = get_value(funds_item, "key")
+                fund_tier = get_value(funds_item, "tier")
+                fund_name = get_value(funds_item, "name")
+                fund_image = get_value(funds_item, "image")
+
+                fund = s.query(Fund).filter_by(key=fund_key).first()
+                if fund:
+                    fund.key = fund_key
+                    fund.tier = fund_tier
+                    fund.name = fund_name
+                    fund.image = fund_image
+                else:
+                    fund = Fund(
+                        key=fund_key,
+                        tier=fund_tier,
+                        name=fund_name,
+                        image=fund_image
+                    )
+                    s.add(fund)
+                    s.commit()
+
+                sale_token_fund = s.query(SaleTokenFund).filter_by(
+                    sale_token_id=sale_token.id,
+                    fund_id=fund.id
+                ).first()
+                if sale_token_fund:
+                    sale_token_fund.sale_token_id = sale_token.id
+                    sale_token_fund.fund_id = fund.id
+                else:
+                    sale_token_fund = SaleTokenFund(
+                        sale_token_id=sale_token.id,
+                        fund_id=fund.id
+                    )
+                    s.add(sale_token_fund)
                     s.commit()
 
 

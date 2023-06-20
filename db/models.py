@@ -6,13 +6,6 @@ from db.setup import get_engine
 Base = declarative_base()
 
 
-class SaleTokenLaunchpad(Base):
-    __tablename__ = "sale_token_launchpad"
-
-    sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
-    launchpad_id = Column(Integer, ForeignKey("launchpads.id"), primary_key=True)
-
-
 class SaleToken(Base):
     __tablename__ = "sale_tokens"
 
@@ -42,6 +35,10 @@ class SaleToken(Base):
         "Launchpad", secondary="sale_token_launchpad", back_populates="sale_tokens"
     )
 
+    funds = relationship(
+        "Fund", secondary="sale_token_fund", back_populates="sale_tokens"
+    )
+
 
 class Launchpad(Base):
     __tablename__ = "launchpads"
@@ -55,6 +52,34 @@ class Launchpad(Base):
     sale_tokens = relationship(
         "SaleToken", secondary="sale_token_launchpad", back_populates="launchpads"
     )
+
+
+class SaleTokenLaunchpad(Base):
+    __tablename__ = "sale_token_launchpad"
+
+    sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
+    launchpad_id = Column(Integer, ForeignKey("launchpads.id"), primary_key=True)
+
+
+class Fund(Base):
+    __tablename__ = "funds"
+
+    id = Column(Integer, primary_key=True)
+    key = Column(String)
+    tier = Column(Integer)
+    name = Column(String)
+    image = Column(String)
+
+    sale_tokens = relationship(
+        "SaleToken", secondary="sale_token_fund", back_populates="funds"
+    )
+
+
+class SaleTokenFund(Base):
+    __tablename__ = "sale_token_fund"
+
+    sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
+    fund_id = Column(Integer, ForeignKey("funds.id"), primary_key=True)
 
 
 if __name__ == "__main__":
