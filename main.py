@@ -11,6 +11,7 @@ from db.models import (
     SaleTokenFund,
     Blockchain,
     SaleTokenBlockchain,
+    Tag, SaleTokenTag,
 )
 from db.setup import create_session
 from request_data import headers, json_data
@@ -246,6 +247,40 @@ def load_data(page, page_type):
                         sale_token_id=sale_token.id, blockchain_id=blockchain.id
                     )
                     s.add(sale_token_blockchain)
+                    s.commit()
+
+        # Tags
+        tags_data = get_value(token, "tags")
+        for tag_item in tags_data:
+            if tag_item:
+                tag_key = get_value(tag_item, "key")
+                tag_name = get_value(tag_item, "name")
+
+                tag = s.query(Tag).filter_by(key=tag_key).first()
+                if tag:
+                    tag.key = tag_key
+                    tag.name = tag_name
+                else:
+                    tag = Tag(
+                        key=tag_key,
+                        name=tag_name
+                    )
+                    s.add(tag)
+                    s.commit()
+
+                sale_token_tag = s.query(SaleTokenTag).filter_by(
+                    sale_token_id=sale_token.id,
+                    tag_id=tag.id
+                ).first()
+                if sale_token_tag:
+                    sale_token_tag.sale_token_id = sale_token.id
+                    sale_token_tag.tag_id = tag.id
+                else:
+                    sale_token_tag = SaleTokenTag(
+                        sale_token_id=sale_token.id,
+                        tag_id=tag.id
+                    )
+                    s.add(sale_token_tag)
                     s.commit()
 
 

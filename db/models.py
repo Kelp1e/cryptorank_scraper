@@ -44,6 +44,8 @@ class SaleToken(Base):
         "Blockchain", secondary="sale_token_blockchain", back_populates="sale_tokens"
     )
 
+    tags = relationship("Tag", secondary="sale_token_tag", back_populates="sale_tokens")
+
 
 class Launchpad(Base):
     __tablename__ = "launchpads"
@@ -105,6 +107,25 @@ class SaleTokenBlockchain(Base):
 
     sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
     blockchain_id = Column(Integer, ForeignKey("blockchains.id"), primary_key=True)
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id = Column(Integer, primary_key=True)
+    key = Column(String)
+    name = Column(String)
+
+    sale_tokens = relationship(
+        "SaleToken", secondary="sale_token_tag", back_populates="tags"
+    )
+
+
+class SaleTokenTag(Base):
+    __tablename__ = "sale_token_tag"
+
+    sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
+    tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
 
 
 if __name__ == "__main__":
