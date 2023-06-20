@@ -166,6 +166,7 @@ def load_pages(page, page_type):
                     s.add(sale_token_launchpad)
                     s.commit()
 
+        # Funds
         funds_data = get_value(token, "funds")
         for funds_item in funds_data:
             if funds_item:
@@ -182,25 +183,22 @@ def load_pages(page, page_type):
                     fund.image = fund_image
                 else:
                     fund = Fund(
-                        key=fund_key,
-                        tier=fund_tier,
-                        name=fund_name,
-                        image=fund_image
+                        key=fund_key, tier=fund_tier, name=fund_name, image=fund_image
                     )
                     s.add(fund)
                     s.commit()
 
-                sale_token_fund = s.query(SaleTokenFund).filter_by(
-                    sale_token_id=sale_token.id,
-                    fund_id=fund.id
-                ).first()
+                sale_token_fund = (
+                    s.query(SaleTokenFund)
+                    .filter_by(sale_token_id=sale_token.id, fund_id=fund.id)
+                    .first()
+                )
                 if sale_token_fund:
                     sale_token_fund.sale_token_id = sale_token.id
                     sale_token_fund.fund_id = fund.id
                 else:
                     sale_token_fund = SaleTokenFund(
-                        sale_token_id=sale_token.id,
-                        fund_id=fund.id
+                        sale_token_id=sale_token.id, fund_id=fund.id
                     )
                     s.add(sale_token_fund)
                     s.commit()
