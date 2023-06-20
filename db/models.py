@@ -39,6 +39,10 @@ class SaleToken(Base):
         "Fund", secondary="sale_token_fund", back_populates="sale_tokens"
     )
 
+    blockchains = relationship(
+        "Blockchain", secondary="sale_token_blockchain", back_populates="sale_tokens"
+    )
+
 
 class Launchpad(Base):
     __tablename__ = "launchpads"
@@ -80,6 +84,26 @@ class SaleTokenFund(Base):
 
     sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
     fund_id = Column(Integer, ForeignKey("funds.id"), primary_key=True)
+
+
+class Blockchain(Base):
+    __tablename__ = "blockchains"
+
+    id = Column(Integer, primary_key=True)
+    key = Column(String)
+    name = Column(String)
+    image = Column(String)
+
+    sale_tokens = relationship(
+        "SaleToken", secondary="sale_token_blockchain", back_populates="blockchains"
+    )
+
+
+class SaleTokenBlockchain(Base):
+    __tablename__ = "sale_token_blockchain"
+
+    sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
+    blockchain_id = Column(Integer, ForeignKey("blockchains.id"), primary_key=True)
 
 
 if __name__ == "__main__":

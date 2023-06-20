@@ -3,7 +3,15 @@ from datetime import date
 
 from cloudscraper import create_scraper
 
-from db.models import SaleToken, Launchpad, SaleTokenLaunchpad, Fund, SaleTokenFund
+from db.models import (
+    SaleToken,
+    Launchpad,
+    SaleTokenLaunchpad,
+    Fund,
+    SaleTokenFund,
+    Blockchain,
+    SaleTokenBlockchain,
+)
 from db.setup import create_session
 from request_data import headers, json_data
 
@@ -69,7 +77,7 @@ def get_value(d, value):
     return None
 
 
-def load_pages(page, page_type):
+def load_data(page, page_type):
     session = create_session()
     s = session()
 
@@ -203,9 +211,38 @@ def load_pages(page, page_type):
                     s.add(sale_token_fund)
                     s.commit()
 
+        blockchains_data = get_value(token, "blockchains")
+        for blockchain_item in blockchains_data:
+            if blockchain_item:
+                blockchain_key = get_value(blockchain_item, "key")
+                blockchain_name = get_value(blockchain_item, "name")
+                blockchain_image = get_value(blockchain_item, "image")
 
-def load_data(page, page_type):
-    load_pages(page, page_type)
+                blockchain = s.query(Blockchain).filter_by(key=blockchain_key).first()
+                if blockchain:
+                    blockchain.name = blockchain_name
+                    blockchain.image = blockchain_image
+                else:
+                    blockchain = Blockchain(
+                        key=blockchain_key, name=blockchain_name, image=blockchain_image
+                    )
+                    s.add(blockchain)
+                    s.commit()
+
+                sale_token_blockchain = (
+                    s.query(SaleTokenBlockchain)
+                    .filter_by(sale_token_id=sale_token.id, blockchain_id=blockchain.id)
+                    .first()
+                )
+                if sale_token_blockchain:
+                    sale_token_blockchain.sale_token_id = sale_token.id
+                    sale_token_blockchain.blockchain_id = blockchain.id
+                else:
+                    sale_token_blockchain = SaleTokenBlockchain(
+                        sale_token_id=sale_token.id, blockchain_id=blockchain.id
+                    )
+                    s.add(sale_token_blockchain)
+                    s.commit()
 
 
 def main():
