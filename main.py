@@ -1,7 +1,9 @@
 import json
+import time
 from datetime import date
 
 from cloudscraper import create_scraper
+from requests import HTTPError
 
 from db.models import (
     SaleToken,
@@ -11,7 +13,8 @@ from db.models import (
     SaleTokenFund,
     Blockchain,
     SaleTokenBlockchain,
-    Tag, SaleTokenTag,
+    Tag,
+    SaleTokenTag, DetailToken,
 )
 from db.setup import create_session
 from request_data import headers, json_data
@@ -44,21 +47,10 @@ def get_page_data(url: str, h: dict, b: dict):
     return to_dict(response.text)
 
 
-def get_token_keys_from_page(page_type):
-    return [token["key"] for token in page_type["data"]]
-
-
 def get_token(token_key):
     response = scraper.get(f"https://api.cryptorank.io/v0/coins/{token_key}?locale=en")
 
     return to_dict(response.text)
-
-
-def get_tokens_data_from_page(page_type):
-    token_keys = get_token_keys_from_page(page_type)
-    tokens_data = [get_token(token_key) for token_key in token_keys]
-
-    return tokens_data
 
 
 def get_ido_roi(group_by: str = "month", end_date: str = get_date()):
@@ -83,65 +75,127 @@ def load_data(page, page_type):
     s = session()
 
     status = page_type
+    request_count = 0
 
-    for token in page:
+    for token_info in page:
+
+        # Detail Token
+        token_key = get_value(token_info, "key")
+
+        detail_token_info = get_token(token_key)["data"]
+
+        detail_token_name = get_value(detail_token_info, "name")
+        detail_token_ico_status = get_value(detail_token_info, "icoStatus")
+        detail_token_has_funding_rounds = get_value(detail_token_info, "hasFundingRounds")
+        detail_token_symbol = get_value(detail_token_info, "symbol")
+        detail_token_type = get_value(detail_token_info, "type")
+        detail_token_life_cycle = get_value(detail_token_info, "lifeCycle")
+        detail_token_max_supply = get_value(detail_token_info, "maxSupply")
+        detail_token_unlimited_supply = get_value(detail_token_info, "unlimitedSupply")
+        detail_token_total_supply = get_value(detail_token_info, "totalSupply")
+        detail_token_image = get_value(get_value(detail_token_info, "image"), "native")
+        detail_token_category = get_value(detail_token_info, "category")
+        detail_token_is_traded = get_value(detail_token_info, "isTraded")
+        detail_token_ico_fully_diluted_market_cap = get_value(detail_token_info, "icoFullyDilutedMarketCap")
+        detail_token_fully_diluted_market_cap = get_value(detail_token_info, "fullyDilutedMarketCap")
+
+        detail_token = s.query(DetailToken).filter_by(key=token_key).first()
+        if detail_token:
+            detail_token.key = token_key
+            detail_token.name = detail_token_name
+            detail_token.ico_status = detail_token_ico_status
+            detail_token.has_funding_rounds = detail_token_has_funding_rounds
+            detail_token.symbol = detail_token_symbol
+            detail_token.type = detail_token_type
+            detail_token.life_cycle = detail_token_life_cycle
+            detail_token.max_supply = detail_token_max_supply
+            detail_token.unlimited_supply = detail_token_unlimited_supply
+            detail_token.total_supply = detail_token_total_supply
+            detail_token.image = detail_token_image
+            detail_token.category = detail_token_category
+            detail_token.is_traded = detail_token_is_traded
+            detail_token.ico_fully_diluted_market_cap = detail_token_ico_fully_diluted_market_cap
+            detail_token.fully_diluted_market_cap = detail_token_fully_diluted_market_cap
+        else:
+            detail_token = DetailToken(
+                key=token_key,
+                name=detail_token_name,
+                ico_status=detail_token_ico_status,
+                has_funding_rounds=detail_token_has_funding_rounds,
+                symbol=detail_token_symbol,
+                type=detail_token_type,
+                life_cycle=detail_token_life_cycle,
+                max_supply=detail_token_max_supply,
+                unlimited_supply=detail_token_unlimited_supply,
+                total_supply=detail_token_total_supply,
+                image=detail_token_image,
+                category=detail_token_category,
+                is_traded=detail_token_is_traded,
+                ico_fully_diluted_market_cap=detail_token_ico_fully_diluted_market_cap,
+                fully_diluted_market_cap=detail_token_fully_diluted_market_cap,
+            )
+            s.add(detail_token)
+            s.commit()
+
         # Sale Token
-        is_sponsored = get_value(token, "isSponsored")
-        name = get_value(token, "name")
-        token_key = get_value(token, "key")
-        symbol = get_value(token, "symbol")
-        image = get_value(token, "image")
-        category = get_value(get_value(token, "category"), "key")
-        initial_cap = get_value(token, "initialCap")
-        raise_amount = get_value(token, "raise")
-        till = get_value(token, "till")
-        total_raise = get_value(token, "total_raise")
-        roi = get_value(token, "roi")
-        ath_roi = get_value(token, "athRoi")
-        sale_price = get_value(token, "salePrice")
-        price = get_value(token, "price")
+        sale_token_detail_token_id = detail_token.id
+        sale_token_is_sponsored = get_value(token_info, "isSponsored")
+        sale_token_name = get_value(token_info, "name")
+        sale_token_symbol = get_value(token_info, "symbol")
+        sale_token_image = get_value(token_info, "image")
+        sale_token_category = get_value(get_value(token_info, "category"), "key")
+        sale_token_initial_cap = get_value(token_info, "initialCap")
+        sale_token_raise_amount = get_value(token_info, "raise")
+        sale_token_till = get_value(token_info, "till")
+        sale_token_total_raise = get_value(token_info, "totalRaise")
+        sale_token_roi = get_value(token_info, "roi")
+        sale_token_ath_roi = get_value(token_info, "athRoi")
+        sale_token_sale_price = get_value(token_info, "salePrice")
+        sale_token_price = get_value(token_info, "price")
 
         sale_token = s.query(SaleToken).filter_by(key=token_key).first()
 
         if sale_token:
+            sale_token.detail_token_id = sale_token_detail_token_id
             sale_token.status = status
-            sale_token.is_sponsored = is_sponsored
-            sale_token.name = name
-            sale_token.symbol = symbol
-            sale_token.image = image
-            sale_token.category = category
-            sale_token.initial_cap = initial_cap
-            sale_token.raise_amount = raise_amount
-            sale_token.till = till
-            sale_token.total_raise = total_raise
-            sale_token.roi = roi
-            sale_token.ath_roi = ath_roi
-            sale_token.sale_price = sale_price
-            sale_token.price = price
+            sale_token.is_sponsored = sale_token_is_sponsored
+            sale_token.name = sale_token_name
+            sale_token.symbol = sale_token_symbol
+            sale_token.image = sale_token_image
+            sale_token.category = sale_token_category
+            sale_token.initial_cap = sale_token_initial_cap
+            sale_token.raise_amount = sale_token_raise_amount
+            sale_token.till = sale_token_till
+            sale_token.total_raise = sale_token_total_raise
+            sale_token.roi = sale_token_roi
+            sale_token.ath_roi = sale_token_ath_roi
+            sale_token.sale_price = sale_token_sale_price
+            sale_token.price = sale_token_price
         else:
             sale_token = SaleToken(
+                detail_token_id=sale_token_detail_token_id,
                 status=status,
-                is_sponsored=is_sponsored,
-                name=name,
+                is_sponsored=sale_token_is_sponsored,
+                name=sale_token_name,
                 key=token_key,
-                symbol=symbol,
-                image=image,
-                category=category,
-                initial_cap=initial_cap,
-                raise_amount=raise_amount,
-                till=till,
-                total_raise=total_raise,
-                roi=roi,
-                ath_roi=ath_roi,
-                sale_price=sale_price,
-                price=price,
+                symbol=sale_token_symbol,
+                image=sale_token_image,
+                category=sale_token_category,
+                initial_cap=sale_token_initial_cap,
+                raise_amount=sale_token_raise_amount,
+                till=sale_token_till,
+                total_raise=sale_token_total_raise,
+                roi=sale_token_roi,
+                ath_roi=sale_token_ath_roi,
+                sale_price=sale_token_sale_price,
+                price=sale_token_price,
             )
 
             s.add(sale_token)
             s.commit()
 
         # Launchpads
-        launchpads_data = get_value(token, "launchpads")
+        launchpads_data = get_value(token_info, "launchpads")
         for launchpads_item in launchpads_data:
             if launchpads_item:
                 launchpad_key = get_value(launchpads_item, "key")
@@ -179,7 +233,7 @@ def load_data(page, page_type):
                     s.commit()
 
         # Funds
-        funds_data = get_value(token, "funds")
+        funds_data = get_value(token_info, "funds")
         for funds_item in funds_data:
             if funds_item:
                 fund_key = get_value(funds_item, "key")
@@ -216,7 +270,7 @@ def load_data(page, page_type):
                     s.commit()
 
         # Blockchains
-        blockchains_data = get_value(token, "blockchains")
+        blockchains_data = get_value(token_info, "blockchains")
         for blockchain_item in blockchains_data:
             if blockchain_item:
                 blockchain_key = get_value(blockchain_item, "key")
@@ -250,7 +304,7 @@ def load_data(page, page_type):
                     s.commit()
 
         # Tags
-        tags_data = get_value(token, "tags")
+        tags_data = get_value(token_info, "tags")
         for tag_item in tags_data:
             if tag_item:
                 tag_key = get_value(tag_item, "key")
@@ -261,24 +315,21 @@ def load_data(page, page_type):
                     tag.key = tag_key
                     tag.name = tag_name
                 else:
-                    tag = Tag(
-                        key=tag_key,
-                        name=tag_name
-                    )
+                    tag = Tag(key=tag_key, name=tag_name)
                     s.add(tag)
                     s.commit()
 
-                sale_token_tag = s.query(SaleTokenTag).filter_by(
-                    sale_token_id=sale_token.id,
-                    tag_id=tag.id
-                ).first()
+                sale_token_tag = (
+                    s.query(SaleTokenTag)
+                    .filter_by(sale_token_id=sale_token.id, tag_id=tag.id)
+                    .first()
+                )
                 if sale_token_tag:
                     sale_token_tag.sale_token_id = sale_token.id
                     sale_token_tag.tag_id = tag.id
                 else:
                     sale_token_tag = SaleTokenTag(
-                        sale_token_id=sale_token.id,
-                        tag_id=tag.id
+                        sale_token_id=sale_token.id, tag_id=tag.id
                     )
                     s.add(sale_token_tag)
                     s.commit()

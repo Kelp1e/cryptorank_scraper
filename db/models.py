@@ -6,10 +6,35 @@ from db.setup import get_engine
 Base = declarative_base()
 
 
+class DetailToken(Base):
+    __tablename__ = "detail_tokens"
+
+    id = Column(Integer, primary_key=True)
+
+    key = Column(String)
+    name = Column(String)
+
+    ico_status = Column(String)
+
+    has_funding_rounds = Column(Boolean)
+    symbol = Column(String)
+    type = Column(String)
+    life_cycle = Column(String)
+    max_supply = Column(BIGINT)
+    unlimited_supply = Column(Boolean)
+    total_supply = Column(BIGINT)
+    image = Column(String)
+    category = Column(String)
+    is_traded = Column(Boolean)
+    ico_fully_diluted_market_cap = Column(Float)
+    fully_diluted_market_cap = Column(Float)
+
+
 class SaleToken(Base):
     __tablename__ = "sale_tokens"
 
     id = Column(Integer, primary_key=True)
+    detail_token_id = Column(Integer, ForeignKey("detail_tokens.id"))
 
     status = Column(String)
 
@@ -31,6 +56,8 @@ class SaleToken(Base):
 
     sale_price = Column(Float)
     price = Column(Float)
+
+    token = relationship("DetailToken")
 
     launchpads = relationship(
         "Launchpad", secondary="sale_token_launchpad", back_populates="sale_tokens"
@@ -126,6 +153,16 @@ class SaleTokenTag(Base):
 
     sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
     tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
+
+
+class Test(Base):
+    __tablename__ = "tests"
+
+    id = Column(Integer, primary_key=True)
+    key = Column(String)
+    name = Column(String)
+
+    description = Column(String)
 
 
 if __name__ == "__main__":
