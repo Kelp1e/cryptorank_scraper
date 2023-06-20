@@ -98,6 +98,7 @@ def load_data(page, page_type):
         roi = get_value(token, "roi")
         ath_roi = get_value(token, "athRoi")
         sale_price = get_value(token, "salePrice")
+        price = get_value(token, "price")
 
         sale_token = s.query(SaleToken).filter_by(key=token_key).first()
 
@@ -115,6 +116,7 @@ def load_data(page, page_type):
             sale_token.roi = roi
             sale_token.ath_roi = ath_roi
             sale_token.sale_price = sale_price
+            sale_token.price = price
         else:
             sale_token = SaleToken(
                 status=status,
@@ -131,6 +133,7 @@ def load_data(page, page_type):
                 roi=roi,
                 ath_roi=ath_roi,
                 sale_price=sale_price,
+                price=price,
             )
 
             s.add(sale_token)
@@ -211,6 +214,7 @@ def load_data(page, page_type):
                     s.add(sale_token_fund)
                     s.commit()
 
+        # Blockchains
         blockchains_data = get_value(token, "blockchains")
         for blockchain_item in blockchains_data:
             if blockchain_item:

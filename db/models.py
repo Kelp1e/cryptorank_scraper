@@ -30,6 +30,7 @@ class SaleToken(Base):
     ath_roi = Column(Float)
 
     sale_price = Column(Float)
+    price = Column(Float)
 
     launchpads = relationship(
         "Launchpad", secondary="sale_token_launchpad", back_populates="sale_tokens"
