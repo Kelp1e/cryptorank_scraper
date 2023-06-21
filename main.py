@@ -148,6 +148,8 @@ def load_data(page, page_type):
             sale_token.unlimited_supply = detail_token_unlimited_supply
             sale_token.total_supply = detail_token_total_supply
             sale_token.is_traded = detail_token_is_traded
+            sale_token.ico_fully_diluted_market_cap = detail_token_ico_fully_diluted_market_cap
+            sale_token.fully_diluted_market_cap = detail_token_fully_diluted_market_cap
         else:
             sale_token = SaleToken(
                 status=status,
@@ -173,6 +175,8 @@ def load_data(page, page_type):
                 unlimited_supply=detail_token_unlimited_supply,
                 total_supply=detail_token_total_supply,
                 is_traded=detail_token_is_traded,
+                ico_fully_diluted_market_cap=detail_token_ico_fully_diluted_market_cap,
+                fully_diluted_market_cap=detail_token_fully_diluted_market_cap
             )
 
             s.add(sale_token)
