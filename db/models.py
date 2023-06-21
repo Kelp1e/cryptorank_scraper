@@ -16,7 +16,6 @@ class SaleToken(Base):
     is_sponsored = Column(Boolean)
     key = Column(String)
     name = Column(String)
-    full_name = Column(String)
     symbol = Column(String)
     image = Column(String)
     category = Column(String)
