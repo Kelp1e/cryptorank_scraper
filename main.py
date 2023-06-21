@@ -107,6 +107,14 @@ def load_data(page, page_type):
             detail_token_info, "fullyDilutedMarketCap"
         )
         detail_token_initial_market_cap = get_value(detail_token_info, "initialMarketCap")
+        detail_token_exist_on_tv = get_value(detail_token_info, "existsOnTv")
+        detail_token_description = get_value(detail_token_info, "description")
+        detail_token_short_description = get_value(detail_token_info, "shortDescription")
+        detail_token_tickers_count = get_value(detail_token_info, "tickersCount")
+        detail_token_exchanges_count = get_value(detail_token_info, "exchangesCount")
+        detail_token_news_count = get_value(detail_token_info, "newsCount")
+        detail_token_watchlists_count = get_value(detail_token_info, "watchlistsCount")
+        detail_token_has_tickers = get_value(detail_token_info, "hasTickers")
 
         # Sale Token
         sale_token_is_sponsored = get_value(token_info, "isSponsored")
@@ -150,6 +158,14 @@ def load_data(page, page_type):
             sale_token.is_traded = detail_token_is_traded
             sale_token.ico_fully_diluted_market_cap = detail_token_ico_fully_diluted_market_cap
             sale_token.fully_diluted_market_cap = detail_token_fully_diluted_market_cap
+            sale_token.exist_on_tv = detail_token_exist_on_tv
+            sale_token.description = detail_token_description
+            sale_token.short_description = detail_token_short_description
+            sale_token.tickers_count = detail_token_tickers_count
+            sale_token.exchanges_count = detail_token_exchanges_count
+            sale_token.news_count = detail_token_news_count
+            sale_token.watchlists_count = detail_token_watchlists_count
+            sale_token.has_tickers = detail_token_has_tickers
         else:
             sale_token = SaleToken(
                 status=status,
@@ -176,7 +192,15 @@ def load_data(page, page_type):
                 total_supply=detail_token_total_supply,
                 is_traded=detail_token_is_traded,
                 ico_fully_diluted_market_cap=detail_token_ico_fully_diluted_market_cap,
-                fully_diluted_market_cap=detail_token_fully_diluted_market_cap
+                fully_diluted_market_cap=detail_token_fully_diluted_market_cap,
+                exist_on_tv=detail_token_exist_on_tv,
+                description=detail_token_description,
+                short_description=detail_token_short_description,
+                tickers_count=detail_token_tickers_count,
+                exchanges_count=detail_token_exchanges_count,
+                news_count=detail_token_news_count,
+                watchlists_count=detail_token_watchlists_count,
+                has_tickers=detail_token_has_tickers,
             )
 
             s.add(sale_token)
@@ -328,9 +352,9 @@ def main():
     active_page = get_page_data(ACTIVE_API, headers, json_data)["data"]
     past_page = get_page_data(PAST_API, headers, json_data)["data"]
 
-    load_data(upcoming_page, UPCOMING_STATUS)
+    # load_data(upcoming_page, UPCOMING_STATUS)
     load_data(active_page, ACTIVE_STATUS)
-    load_data(past_page, PAST_STATUS)
+    # load_data(past_page, PAST_STATUS)
 
 
 if __name__ == "__main__":
