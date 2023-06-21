@@ -14,7 +14,8 @@ from db.models import (
     Blockchain,
     SaleTokenBlockchain,
     Tag,
-    SaleTokenTag, DetailToken,
+    SaleTokenTag,
+    DetailToken,
 )
 from db.setup import create_session
 from request_data import headers, json_data
@@ -50,6 +51,16 @@ def get_page_data(url: str, h: dict, b: dict):
 def get_token(token_key):
     response = scraper.get(f"https://api.cryptorank.io/v0/coins/{token_key}?locale=en")
 
+    if response.status_code == 429:
+        print(f"{token_key} sleep")
+        time.sleep(10)
+
+        response = scraper.get(
+            f"https://api.cryptorank.io/v0/coins/{token_key}?locale=en"
+        )
+
+        return to_dict(response.text)
+
     return to_dict(response.text)
 
 
@@ -75,10 +86,8 @@ def load_data(page, page_type):
     s = session()
 
     status = page_type
-    request_count = 0
 
     for token_info in page:
-
         # Detail Token
         token_key = get_value(token_info, "key")
 
@@ -86,7 +95,9 @@ def load_data(page, page_type):
 
         detail_token_name = get_value(detail_token_info, "name")
         detail_token_ico_status = get_value(detail_token_info, "icoStatus")
-        detail_token_has_funding_rounds = get_value(detail_token_info, "hasFundingRounds")
+        detail_token_has_funding_rounds = get_value(
+            detail_token_info, "hasFundingRounds"
+        )
         detail_token_symbol = get_value(detail_token_info, "symbol")
         detail_token_type = get_value(detail_token_info, "type")
         detail_token_life_cycle = get_value(detail_token_info, "lifeCycle")
@@ -96,8 +107,12 @@ def load_data(page, page_type):
         detail_token_image = get_value(get_value(detail_token_info, "image"), "native")
         detail_token_category = get_value(detail_token_info, "category")
         detail_token_is_traded = get_value(detail_token_info, "isTraded")
-        detail_token_ico_fully_diluted_market_cap = get_value(detail_token_info, "icoFullyDilutedMarketCap")
-        detail_token_fully_diluted_market_cap = get_value(detail_token_info, "fullyDilutedMarketCap")
+        detail_token_ico_fully_diluted_market_cap = get_value(
+            detail_token_info, "icoFullyDilutedMarketCap"
+        )
+        detail_token_fully_diluted_market_cap = get_value(
+            detail_token_info, "fullyDilutedMarketCap"
+        )
 
         detail_token = s.query(DetailToken).filter_by(key=token_key).first()
         if detail_token:
@@ -114,8 +129,12 @@ def load_data(page, page_type):
             detail_token.image = detail_token_image
             detail_token.category = detail_token_category
             detail_token.is_traded = detail_token_is_traded
-            detail_token.ico_fully_diluted_market_cap = detail_token_ico_fully_diluted_market_cap
-            detail_token.fully_diluted_market_cap = detail_token_fully_diluted_market_cap
+            detail_token.ico_fully_diluted_market_cap = (
+                detail_token_ico_fully_diluted_market_cap
+            )
+            detail_token.fully_diluted_market_cap = (
+                detail_token_fully_diluted_market_cap
+            )
         else:
             detail_token = DetailToken(
                 key=token_key,

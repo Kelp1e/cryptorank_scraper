@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, BIGINT
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, BIGINT, Text
 from sqlalchemy.orm import declarative_base, relationship
 
 from db.setup import get_engine
@@ -6,58 +6,48 @@ from db.setup import get_engine
 Base = declarative_base()
 
 
-class DetailToken(Base):
-    __tablename__ = "detail_tokens"
+class SaleToken(Base):
+    __tablename__ = "sale_tokens"
 
     id = Column(Integer, primary_key=True)
+    status = Column(String)
 
+    # Sale Token
+    is_sponsored = Column(Boolean)
     key = Column(String)
     name = Column(String)
-
-    ico_status = Column(String)
-
-    has_funding_rounds = Column(Boolean)
+    full_name = Column(String)
     symbol = Column(String)
+    image = Column(String)
+    category = Column(String)
+    initial_cap = Column(BIGINT)
+    raise_amount = Column(BIGINT)
+    till = Column(String)
+    total_raise = Column(BIGINT)
+    roi = Column(Float)
+    ath_roi = Column(Float)
+    sale_price = Column(Float)
+    price = Column(Float)
+
+    # Detail Token
+    has_funding_rounds = Column(Boolean)
     type = Column(String)
     life_cycle = Column(String)
     max_supply = Column(BIGINT)
     unlimited_supply = Column(Boolean)
     total_supply = Column(BIGINT)
-    image = Column(String)
-    category = Column(String)
     is_traded = Column(Boolean)
     ico_fully_diluted_market_cap = Column(Float)
     fully_diluted_market_cap = Column(Float)
-
-
-class SaleToken(Base):
-    __tablename__ = "sale_tokens"
-
-    id = Column(Integer, primary_key=True)
-    detail_token_id = Column(Integer, ForeignKey("detail_tokens.id"))
-
-    status = Column(String)
-
-    is_sponsored = Column(Boolean)
-    name = Column(String)
-    key = Column(String)
-    symbol = Column(String)
-    image = Column(String)
-
-    category = Column(String)
-
-    initial_cap = Column(BIGINT)
-    raise_amount = Column(BIGINT)
-    till = Column(String)
-    total_raise = Column(BIGINT)
-
-    roi = Column(Float)
-    ath_roi = Column(Float)
-
-    sale_price = Column(Float)
-    price = Column(Float)
-
-    token = relationship("DetailToken")
+    initial_market_cap = Column(BIGINT)
+    exist_on_tv = Column(Boolean)
+    description = Column(Text)
+    short_description = Column(Text)
+    tickers_count = Column(Integer)
+    exchanges_count = Column(Integer)
+    news_count = Column(Integer)
+    watchlists_count = Column(Integer)
+    has_tickers = Column(Boolean)
 
     launchpads = relationship(
         "Launchpad", secondary="sale_token_launchpad", back_populates="sale_tokens"
@@ -155,14 +145,14 @@ class SaleTokenTag(Base):
     tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
 
 
-class Test(Base):
-    __tablename__ = "tests"
-
-    id = Column(Integer, primary_key=True)
-    key = Column(String)
-    name = Column(String)
-
-    description = Column(String)
+# class Test(Base):
+#     __tablename__ = "tests"
+#
+#     id = Column(Integer, primary_key=True)
+#     key = Column(String)
+#     name = Column(String)
+#
+#     description = Column(String)
 
 
 if __name__ == "__main__":
