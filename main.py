@@ -15,7 +15,6 @@ from db.models import (
     SaleTokenBlockchain,
     Tag,
     SaleTokenTag,
-    DetailToken,
 )
 from db.setup import create_session
 from request_data import headers, json_data
