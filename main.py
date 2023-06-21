@@ -99,7 +99,6 @@ def load_data(page, page_type):
         detail_token_max_supply = get_value(detail_token_info, "maxSupply")
         detail_token_unlimited_supply = get_value(detail_token_info, "unlimitedSupply")
         detail_token_total_supply = get_value(detail_token_info, "totalSupply")
-        detail_token_category = get_value(detail_token_info, "category")
         detail_token_is_traded = get_value(detail_token_info, "isTraded")
         detail_token_ico_fully_diluted_market_cap = get_value(
             detail_token_info, "icoFullyDilutedMarketCap"
@@ -142,6 +141,13 @@ def load_data(page, page_type):
             sale_token.sale_price = sale_token_sale_price
             sale_token.price = sale_token_price
             sale_token.initial_market_cap = detail_token_initial_market_cap
+            sale_token.has_funding_rounds = detail_token_has_funding_rounds
+            sale_token.type = detail_token_type
+            sale_token.life_cycle = detail_token_life_cycle
+            sale_token.max_supply = detail_token_max_supply
+            sale_token.unlimited_supply = detail_token_unlimited_supply
+            sale_token.total_supply = detail_token_total_supply
+            sale_token.is_traded = detail_token_is_traded
         else:
             sale_token = SaleToken(
                 status=status,
@@ -160,6 +166,13 @@ def load_data(page, page_type):
                 sale_price=sale_token_sale_price,
                 price=sale_token_price,
                 initial_market_cap=detail_token_initial_market_cap,
+                has_funding_rounds=detail_token_has_funding_rounds,
+                type=detail_token_type,
+                life_cycle=detail_token_life_cycle,
+                max_supply=detail_token_max_supply,
+                unlimited_supply=detail_token_unlimited_supply,
+                total_supply=detail_token_total_supply,
+                is_traded=detail_token_is_traded,
             )
 
             s.add(sale_token)
