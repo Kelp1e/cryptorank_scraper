@@ -145,16 +145,6 @@ class SaleTokenTag(Base):
     tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
 
 
-# class Test(Base):
-#     __tablename__ = "tests"
-#
-#     id = Column(Integer, primary_key=True)
-#     key = Column(String)
-#     name = Column(String)
-#
-#     description = Column(String)
-
-
 if __name__ == "__main__":
     engine = get_engine()
     Base.metadata.create_all(engine)
