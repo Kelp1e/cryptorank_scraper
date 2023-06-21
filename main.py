@@ -3,7 +3,6 @@ import time
 from datetime import date
 
 from cloudscraper import create_scraper
-from requests import HTTPError
 
 from db.models import (
     SaleToken,
