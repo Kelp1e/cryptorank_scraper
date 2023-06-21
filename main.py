@@ -92,18 +92,14 @@ def load_data(page, page_type):
 
         detail_token_info = get_token(token_key)["data"]
 
-        detail_token_name = get_value(detail_token_info, "name")
-        detail_token_ico_status = get_value(detail_token_info, "icoStatus")
         detail_token_has_funding_rounds = get_value(
             detail_token_info, "hasFundingRounds"
         )
-        detail_token_symbol = get_value(detail_token_info, "symbol")
         detail_token_type = get_value(detail_token_info, "type")
         detail_token_life_cycle = get_value(detail_token_info, "lifeCycle")
         detail_token_max_supply = get_value(detail_token_info, "maxSupply")
         detail_token_unlimited_supply = get_value(detail_token_info, "unlimitedSupply")
         detail_token_total_supply = get_value(detail_token_info, "totalSupply")
-        detail_token_image = get_value(get_value(detail_token_info, "image"), "native")
         detail_token_category = get_value(detail_token_info, "category")
         detail_token_is_traded = get_value(detail_token_info, "isTraded")
         detail_token_ico_fully_diluted_market_cap = get_value(
@@ -112,51 +108,9 @@ def load_data(page, page_type):
         detail_token_fully_diluted_market_cap = get_value(
             detail_token_info, "fullyDilutedMarketCap"
         )
-
-        detail_token = s.query(DetailToken).filter_by(key=token_key).first()
-        if detail_token:
-            detail_token.key = token_key
-            detail_token.name = detail_token_name
-            detail_token.ico_status = detail_token_ico_status
-            detail_token.has_funding_rounds = detail_token_has_funding_rounds
-            detail_token.symbol = detail_token_symbol
-            detail_token.type = detail_token_type
-            detail_token.life_cycle = detail_token_life_cycle
-            detail_token.max_supply = detail_token_max_supply
-            detail_token.unlimited_supply = detail_token_unlimited_supply
-            detail_token.total_supply = detail_token_total_supply
-            detail_token.image = detail_token_image
-            detail_token.category = detail_token_category
-            detail_token.is_traded = detail_token_is_traded
-            detail_token.ico_fully_diluted_market_cap = (
-                detail_token_ico_fully_diluted_market_cap
-            )
-            detail_token.fully_diluted_market_cap = (
-                detail_token_fully_diluted_market_cap
-            )
-        else:
-            detail_token = DetailToken(
-                key=token_key,
-                name=detail_token_name,
-                ico_status=detail_token_ico_status,
-                has_funding_rounds=detail_token_has_funding_rounds,
-                symbol=detail_token_symbol,
-                type=detail_token_type,
-                life_cycle=detail_token_life_cycle,
-                max_supply=detail_token_max_supply,
-                unlimited_supply=detail_token_unlimited_supply,
-                total_supply=detail_token_total_supply,
-                image=detail_token_image,
-                category=detail_token_category,
-                is_traded=detail_token_is_traded,
-                ico_fully_diluted_market_cap=detail_token_ico_fully_diluted_market_cap,
-                fully_diluted_market_cap=detail_token_fully_diluted_market_cap,
-            )
-            s.add(detail_token)
-            s.commit()
+        detail_token_initial_market_cap = get_value(detail_token_info, "initialMarketCap")
 
         # Sale Token
-        sale_token_detail_token_id = detail_token.id
         sale_token_is_sponsored = get_value(token_info, "isSponsored")
         sale_token_name = get_value(token_info, "name")
         sale_token_symbol = get_value(token_info, "symbol")
@@ -174,7 +128,6 @@ def load_data(page, page_type):
         sale_token = s.query(SaleToken).filter_by(key=token_key).first()
 
         if sale_token:
-            sale_token.detail_token_id = sale_token_detail_token_id
             sale_token.status = status
             sale_token.is_sponsored = sale_token_is_sponsored
             sale_token.name = sale_token_name
@@ -189,9 +142,9 @@ def load_data(page, page_type):
             sale_token.ath_roi = sale_token_ath_roi
             sale_token.sale_price = sale_token_sale_price
             sale_token.price = sale_token_price
+            sale_token.initial_market_cap = detail_token_initial_market_cap
         else:
             sale_token = SaleToken(
-                detail_token_id=sale_token_detail_token_id,
                 status=status,
                 is_sponsored=sale_token_is_sponsored,
                 name=sale_token_name,
@@ -207,6 +160,7 @@ def load_data(page, page_type):
                 ath_roi=sale_token_ath_roi,
                 sale_price=sale_token_sale_price,
                 price=sale_token_price,
+                initial_market_cap=detail_token_initial_market_cap,
             )
 
             s.add(sale_token)
