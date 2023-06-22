@@ -1,6 +1,20 @@
+import argparse
+
 from fake_useragent import FakeUserAgent
 
 user_agent = FakeUserAgent()
+
+
+def get_limit():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--one", action="store_true")
+    args = parser.parse_args()
+
+    if args.one:
+        return 50
+    else:
+        return 9999
+
 
 headers = {
     "authority": "api.cryptorank.io",
@@ -20,7 +34,7 @@ headers = {
 
 json_data = {
     "path": "round/active",
-    "limit": 99999,
+    "limit": get_limit(),
     "filters": {},
     "skip": 0,
     "status": "active",

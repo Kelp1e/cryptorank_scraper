@@ -439,8 +439,8 @@ def main():
     active_page = get_page_data(ACTIVE_API, headers, json_data)["data"]
     past_page = get_page_data(PAST_API, headers, json_data)["data"]
 
-    # load_data(upcoming_page)
-    load_data(active_page)
+    load_data(upcoming_page)
+    # load_data(active_page)
     # load_data(past_page)
 
 

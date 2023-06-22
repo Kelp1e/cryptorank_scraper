@@ -12,7 +12,6 @@ class SaleToken(Base):
     id = Column(Integer, primary_key=True)
     status = Column(String)
 
-    # Sale Token
     is_sponsored = Column(Boolean)
     key = Column(String)
     name = Column(String)
@@ -28,7 +27,6 @@ class SaleToken(Base):
     sale_price = Column(Float)
     price = Column(Float)
 
-    # Detail Token
     has_funding_rounds = Column(Boolean)
     type = Column(String)
     life_cycle = Column(String)
@@ -94,7 +92,7 @@ class Fund(Base):
     __tablename__ = "funds"
 
     id = Column(Integer, primary_key=True)
-    key = Column(String)
+    key = Column(String, unique=True)
     tier = Column(Integer)
     name = Column(String)
     image = Column(String)
