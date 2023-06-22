@@ -94,9 +94,7 @@ def load_sale_token(token_info, s):
 
     detail_token_image = get_value(get_value(detail_token_info, "image"), "native")
     detail_token_status = get_value(detail_token_info, "icoStatus")
-    detail_token_has_funding_rounds = get_value(
-        detail_token_info, "hasFundingRounds"
-    )
+    detail_token_has_funding_rounds = get_value(detail_token_info, "hasFundingRounds")
     detail_token_type = get_value(detail_token_info, "type")
     detail_token_life_cycle = get_value(detail_token_info, "lifeCycle")
     detail_token_max_supply = get_value(detail_token_info, "maxSupply")
@@ -109,14 +107,10 @@ def load_sale_token(token_info, s):
     detail_token_fully_diluted_market_cap = get_value(
         detail_token_info, "fullyDilutedMarketCap"
     )
-    detail_token_initial_market_cap = get_value(
-        detail_token_info, "initialMarketCap"
-    )
+    detail_token_initial_market_cap = get_value(detail_token_info, "initialMarketCap")
     detail_token_exist_on_tv = get_value(detail_token_info, "existsOnTv")
     detail_token_description = get_value(detail_token_info, "description")
-    detail_token_short_description = get_value(
-        detail_token_info, "shortDescription"
-    )
+    detail_token_short_description = get_value(detail_token_info, "shortDescription")
     detail_token_history_start_day = get_value(detail_token_info, "historyStartDay")
     detail_token_history_end_day = get_value(detail_token_info, "historyEndDay")
     detail_token_tickers_count = get_value(detail_token_info, "tickersCount")
@@ -476,7 +470,7 @@ def main():
 
     load_data(upcoming_page)
     load_data(active_page)
-    # load_data(past_page)
+    load_data(past_page)
 
 
 if __name__ == "__main__":
