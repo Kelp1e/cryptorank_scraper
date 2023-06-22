@@ -24,10 +24,6 @@ UPCOMING_API = "https://api.cryptorank.io/v0/round/upcoming"
 ACTIVE_API = "https://api.cryptorank.io/v0/round/active"
 PAST_API = "https://api.cryptorank.io/v0/round/past"
 
-UPCOMING_STATUS = "upcoming"
-ACTIVE_STATUS = "active"
-PAST_STATUS = "past"
-
 
 def get_date():
     current_date = date.today()
@@ -79,11 +75,9 @@ def get_value(d, value):
     return None
 
 
-def load_data(page, page_type):
+def load_data(page):
     session = create_session()
     s = session()
-
-    status = page_type
 
     for token_info in page:
         # Detail Token
@@ -91,6 +85,7 @@ def load_data(page, page_type):
 
         detail_token_info = get_token(token_key)["data"]
 
+        detail_token_status = get_value(detail_token_info, "icoStatus")
         detail_token_has_funding_rounds = get_value(
             detail_token_info, "hasFundingRounds"
         )
@@ -134,7 +129,7 @@ def load_data(page, page_type):
         sale_token = s.query(SaleToken).filter_by(key=token_key).first()
 
         if sale_token:
-            sale_token.status = status
+            sale_token.status = detail_token_status
             sale_token.is_sponsored = sale_token_is_sponsored
             sale_token.name = sale_token_name
             sale_token.symbol = sale_token_symbol
@@ -168,7 +163,7 @@ def load_data(page, page_type):
             sale_token.has_tickers = detail_token_has_tickers
         else:
             sale_token = SaleToken(
-                status=status,
+                status=detail_token_status,
                 is_sponsored=sale_token_is_sponsored,
                 name=sale_token_name,
                 key=token_key,
@@ -352,9 +347,9 @@ def main():
     active_page = get_page_data(ACTIVE_API, headers, json_data)["data"]
     past_page = get_page_data(PAST_API, headers, json_data)["data"]
 
-    # load_data(upcoming_page, UPCOMING_STATUS)
-    load_data(active_page, ACTIVE_STATUS)
-    # load_data(past_page, PAST_STATUS)
+    # load_data(upcoming_page)
+    load_data(active_page)
+    # load_data(past_page)
 
 
 if __name__ == "__main__":

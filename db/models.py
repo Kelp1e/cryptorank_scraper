@@ -62,6 +62,10 @@ class SaleToken(Base):
 
     tags = relationship("Tag", secondary="sale_token_tag", back_populates="sale_tokens")
 
+    crowdsales = relationship(
+        "Crowdsale", secondary="sale_token_crowdsale", back_populates="sale_tokens"
+    )
+
 
 class Launchpad(Base):
     __tablename__ = "launchpads"
@@ -142,6 +146,36 @@ class SaleTokenTag(Base):
 
     sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
     tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
+
+
+class Crowdsale(Base):
+    __tablename__ = "crowdsales"
+
+    id = Column(Integer, primary_key=True)
+    type = Column(String)
+    start = Column(String)
+    end = Column(String)
+    show_only_month = Column(Boolean)
+    priority_rating = Column(Integer)
+    tokens_for_sale = Column(BIGINT)
+    lockup_period = Column(String)
+    status = Column(String)
+    is_calculate_roi_table = Column(Boolean)
+    is_sponsored = Column(Boolean)
+    ido_platform_key = Column(Boolean)
+    price = Column(Float)
+    raise_amount = Column(BIGINT)
+
+    sale_tokens = relationship(
+        "SaleToken", secondary="sale_token_crowdsale", back_populates="crowdsales"
+    )
+
+
+class SaleTokenCrowdsale(Base):
+    __tablename__ = "sale_token_crowdsale"
+
+    sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
+    crowdsale_id = Column(Integer, ForeignKey("crowdsales.id"), primary_key=True)
 
 
 if __name__ == "__main__":
