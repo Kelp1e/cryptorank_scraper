@@ -16,7 +16,6 @@ class SaleToken(Base):
     key = Column(String)
     name = Column(String)
     symbol = Column(String)
-    image = Column(String)
     category = Column(String)
     initial_cap = Column(BIGINT)
     raise_amount = Column(BIGINT)
@@ -74,7 +73,6 @@ class Launchpad(Base):
 
     key = Column(String, unique=True)
     name = Column(String)
-    image = Column(String)
 
     sale_tokens = relationship(
         "SaleToken", secondary="sale_token_launchpad", back_populates="launchpads"
@@ -95,7 +93,6 @@ class Fund(Base):
     key = Column(String, unique=True)
     tier = Column(Integer)
     name = Column(String)
-    image = Column(String)
 
     sale_tokens = relationship(
         "SaleToken", secondary="sale_token_fund", back_populates="funds"
@@ -115,7 +112,6 @@ class Blockchain(Base):
     id = Column(Integer, primary_key=True)
     key = Column(String)
     name = Column(String)
-    image = Column(String)
 
     sale_tokens = relationship(
         "SaleToken", secondary="sale_token_blockchain", back_populates="blockchains"

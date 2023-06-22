@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from datetime import date
 
@@ -48,7 +49,7 @@ def get_token(token_key):
     response = scraper.get(f"https://api.cryptorank.io/v0/coins/{token_key}?locale=en")
 
     if response.status_code == 429:
-        print(f"{token_key} sleep")
+        print(f"Received 429 error. Waiting for a while... {token_key} sleep")
         time.sleep(10)
 
         response = scraper.get(
@@ -77,6 +78,15 @@ def get_value(d, value):
     return None
 
 
+def download_image(url, key):
+    os.makedirs("images", exist_ok=True)
+    image_path = os.path.join("images", f"{key.lower()}.png")
+
+    response = scraper.get(url)
+    with open(image_path, "wb") as file:
+        file.write(response.content)
+
+
 def load_data(page):
     session = create_session()
     s = session()
@@ -87,6 +97,7 @@ def load_data(page):
 
         detail_token_info = get_token(token_key)["data"]
 
+        detail_token_image = get_value(get_value(detail_token_info, "image"), "native")
         detail_token_status = get_value(detail_token_info, "icoStatus")
         detail_token_has_funding_rounds = get_value(
             detail_token_info, "hasFundingRounds"
@@ -123,7 +134,6 @@ def load_data(page):
         sale_token_is_sponsored = get_value(token_info, "isSponsored")
         sale_token_name = get_value(token_info, "name")
         sale_token_symbol = get_value(token_info, "symbol")
-        sale_token_image = get_value(token_info, "image")
         sale_token_category = get_value(get_value(token_info, "category"), "key")
         sale_token_initial_cap = get_value(token_info, "initialCap")
         sale_token_raise_amount = get_value(token_info, "raise")
@@ -141,7 +151,6 @@ def load_data(page):
             sale_token.is_sponsored = sale_token_is_sponsored
             sale_token.name = sale_token_name
             sale_token.symbol = sale_token_symbol
-            sale_token.image = sale_token_image
             sale_token.category = sale_token_category
             sale_token.initial_cap = sale_token_initial_cap
             sale_token.raise_amount = sale_token_raise_amount
@@ -180,7 +189,6 @@ def load_data(page):
                 name=sale_token_name,
                 key=token_key,
                 symbol=sale_token_symbol,
-                image=sale_token_image,
                 category=sale_token_category,
                 initial_cap=sale_token_initial_cap,
                 raise_amount=sale_token_raise_amount,
@@ -211,9 +219,10 @@ def load_data(page):
                 watchlists_count=detail_token_watchlists_count,
                 has_tickers=detail_token_has_tickers,
             )
-
             s.add(sale_token)
             s.commit()
+
+        download_image(detail_token_image, token_key)
 
         # Launchpads
         launchpads_data = get_value(token_info, "launchpads")
@@ -227,12 +236,10 @@ def load_data(page):
                 if launchpad:
                     launchpad.key = launchpad_key
                     launchpad.name = launchpad_name
-                    launchpad.image = launchpad_image
                 else:
                     launchpad = Launchpad(
                         key=launchpad_key,
                         name=launchpad_name,
-                        image=launchpad_image,
                     )
                 s.add(launchpad)
                 s.commit()
@@ -253,6 +260,8 @@ def load_data(page):
                     s.add(sale_token_launchpad)
                     s.commit()
 
+                download_image(launchpad_image, launchpad_key)
+
         # Funds
         funds_data = get_value(token_info, "funds")
         for funds_item in funds_data:
@@ -267,10 +276,11 @@ def load_data(page):
                     fund.key = fund_key
                     fund.tier = fund_tier
                     fund.name = fund_name
-                    fund.image = fund_image
                 else:
                     fund = Fund(
-                        key=fund_key, tier=fund_tier, name=fund_name, image=fund_image
+                        key=fund_key,
+                        tier=fund_tier,
+                        name=fund_name,
                     )
                     s.add(fund)
                     s.commit()
@@ -290,6 +300,8 @@ def load_data(page):
                     s.add(sale_token_fund)
                     s.commit()
 
+                download_image(fund_image, fund_key)
+
         # Blockchains
         blockchains_data = get_value(token_info, "blockchains")
         for blockchain_item in blockchains_data:
@@ -300,12 +312,10 @@ def load_data(page):
 
                 blockchain = s.query(Blockchain).filter_by(key=blockchain_key).first()
                 if blockchain:
+                    blockchain.key = blockchain_key
                     blockchain.name = blockchain_name
-                    blockchain.image = blockchain_image
                 else:
-                    blockchain = Blockchain(
-                        key=blockchain_key, name=blockchain_name, image=blockchain_image
-                    )
+                    blockchain = Blockchain(key=blockchain_key, name=blockchain_name)
                     s.add(blockchain)
                     s.commit()
 
@@ -323,6 +333,8 @@ def load_data(page):
                     )
                     s.add(sale_token_blockchain)
                     s.commit()
+
+                download_image(blockchain_image, blockchain_key)
 
         # Tags
         tags_data = get_value(token_info, "tags")
@@ -417,9 +429,7 @@ def load_data(page):
 
                 sale_token_crowdsale = (
                     s.query(SaleTokenCrowdsale)
-                    .filter_by(
-                        sale_token_id=sale_token.id, crowdsale_id=crowdsale.id
-                    )
+                    .filter_by(sale_token_id=sale_token.id, crowdsale_id=crowdsale.id)
                     .first()
                 )
                 if sale_token_crowdsale:
@@ -427,8 +437,7 @@ def load_data(page):
                     sale_token_crowdsale.crowdsale_id = crowdsale.id
                 else:
                     sale_token_crowdsale = SaleTokenCrowdsale(
-                        sale_token_id=sale_token.id,
-                        crowdsale_id=crowdsale.id
+                        sale_token_id=sale_token.id, crowdsale_id=crowdsale.id
                     )
                     s.add(sale_token_crowdsale)
                     s.commit()
@@ -439,8 +448,8 @@ def main():
     active_page = get_page_data(ACTIVE_API, headers, json_data)["data"]
     past_page = get_page_data(PAST_API, headers, json_data)["data"]
 
-    load_data(upcoming_page)
-    # load_data(active_page)
+    # load_data(upcoming_page)
+    load_data(active_page)
     # load_data(past_page)
 
 
