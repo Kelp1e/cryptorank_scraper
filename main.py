@@ -1,4 +1,5 @@
 import json
+import re
 import os
 import time
 from datetime import date
@@ -13,8 +14,6 @@ from db.models import (
     SaleTokenFund,
     Blockchain,
     SaleTokenBlockchain,
-    Tag,
-    SaleTokenTag,
     Crowdsale,
     SaleTokenCrowdsale,
 )
@@ -35,6 +34,7 @@ def get_date():
     return date_string
 
 
+# JSON to Python Dict
 def to_dict(string: str):
     return json.loads(string)
 
@@ -78,6 +78,15 @@ def get_value(d, value):
     return None
 
 
+def remove_tags(string):
+    if isinstance(string, str):
+        formatted_string = re.sub("<[^<]+?>", "", string)
+
+        return formatted_string
+
+    return None
+
+
 def download_image(url, key):
     os.makedirs("images", exist_ok=True)
     image_path = os.path.join("images", f"{key.lower()}.png")
@@ -87,51 +96,56 @@ def download_image(url, key):
         file.write(response.content)
 
 
-def load_sale_token(token_info, s):
-    token_key = get_value(token_info, "key")
+def remove_localization_from_obj_in_array(data):
+    return [{k: v for k, v in obj.items() if k != "localization"} for obj in data]
 
-    detail_token_info = get_token(token_key)["data"]
 
-    detail_token_image = get_value(get_value(detail_token_info, "image"), "native")
-    detail_token_status = get_value(detail_token_info, "icoStatus")
-    detail_token_has_funding_rounds = get_value(detail_token_info, "hasFundingRounds")
-    detail_token_type = get_value(detail_token_info, "type")
-    detail_token_life_cycle = get_value(detail_token_info, "lifeCycle")
-    detail_token_max_supply = get_value(detail_token_info, "maxSupply")
-    detail_token_unlimited_supply = get_value(detail_token_info, "unlimitedSupply")
-    detail_token_total_supply = get_value(detail_token_info, "totalSupply")
-    detail_token_is_traded = get_value(detail_token_info, "isTraded")
+def load_sale_token(token, s):
+    token_key = get_value(token, "key")
+
+    detail_token = get_token(token_key)["data"]
+
+    detail_token_image = get_value(get_value(detail_token, "image"), "native")
+    detail_token_status = get_value(detail_token, "icoStatus")
+    detail_token_has_funding_rounds = get_value(detail_token, "hasFundingRounds")
+    detail_token_type = get_value(detail_token, "type")
+    detail_token_life_cycle = get_value(detail_token, "lifeCycle")
+    detail_token_max_supply = get_value(detail_token, "maxSupply")
+    detail_token_unlimited_supply = get_value(detail_token, "unlimitedSupply")
+    detail_token_total_supply = get_value(detail_token, "totalSupply")
+    detail_token_is_traded = get_value(detail_token, "isTraded")
     detail_token_ico_fully_diluted_market_cap = get_value(
-        detail_token_info, "icoFullyDilutedMarketCap"
+        detail_token, "icoFullyDilutedMarketCap"
     )
     detail_token_fully_diluted_market_cap = get_value(
-        detail_token_info, "fullyDilutedMarketCap"
+        detail_token, "fullyDilutedMarketCap"
     )
-    detail_token_initial_market_cap = get_value(detail_token_info, "initialMarketCap")
-    detail_token_exist_on_tv = get_value(detail_token_info, "existsOnTv")
-    detail_token_description = get_value(detail_token_info, "description")
-    detail_token_short_description = get_value(detail_token_info, "shortDescription")
-    detail_token_history_start_day = get_value(detail_token_info, "historyStartDay")
-    detail_token_history_end_day = get_value(detail_token_info, "historyEndDay")
-    detail_token_tickers_count = get_value(detail_token_info, "tickersCount")
-    detail_token_exchanges_count = get_value(detail_token_info, "exchangesCount")
-    detail_token_news_count = get_value(detail_token_info, "newsCount")
-    detail_token_watchlists_count = get_value(detail_token_info, "watchlistsCount")
-    detail_token_has_tickers = get_value(detail_token_info, "hasTickers")
+    detail_token_initial_market_cap = get_value(detail_token, "initialMarketCap")
+    detail_token_exist_on_tv = get_value(detail_token, "existsOnTv")
+    detail_token_description = remove_tags(get_value(detail_token, "description"))
+    detail_token_short_description = get_value(detail_token, "shortDescription")
+    detail_token_history_start_day = get_value(detail_token, "historyStartDay")
+    detail_token_history_end_day = get_value(detail_token, "historyEndDay")
+    detail_token_tickers_count = get_value(detail_token, "tickersCount")
+    detail_token_exchanges_count = get_value(detail_token, "exchangesCount")
+    detail_token_news_count = get_value(detail_token, "newsCount")
+    detail_token_watchlists_count = get_value(detail_token, "watchlistsCount")
+    detail_token_has_tickers = get_value(detail_token, "hasTickers")
+    detail_token_tags = [get_value(obj, "name") for obj in get_value(token, "tags")]
 
     # Sale Token
-    sale_token_is_sponsored = get_value(token_info, "isSponsored")
-    sale_token_name = get_value(token_info, "name")
-    sale_token_symbol = get_value(token_info, "symbol")
-    sale_token_category = get_value(get_value(token_info, "category"), "key")
-    sale_token_initial_cap = get_value(token_info, "initialCap")
-    sale_token_raise_amount = get_value(token_info, "raise")
-    sale_token_till = get_value(token_info, "till")
-    sale_token_total_raise = get_value(token_info, "totalRaise")
-    sale_token_roi = get_value(token_info, "roi")
-    sale_token_ath_roi = get_value(token_info, "athRoi")
-    sale_token_sale_price = get_value(token_info, "salePrice")
-    sale_token_price = get_value(token_info, "price")
+    sale_token_is_sponsored = get_value(token, "isSponsored")
+    sale_token_name = get_value(token, "name")
+    sale_token_symbol = get_value(token, "symbol")
+    sale_token_category = get_value(get_value(token, "category"), "key")
+    sale_token_initial_cap = get_value(token, "initialCap")
+    sale_token_raise_amount = get_value(token, "raise")
+    sale_token_till = get_value(token, "till")
+    sale_token_total_raise = get_value(token, "totalRaise")
+    sale_token_roi = get_value(token, "roi")
+    sale_token_ath_roi = get_value(token, "athRoi")
+    sale_token_sale_price = get_value(token, "salePrice")
+    sale_token_price = get_value(token, "price")
 
     sale_token = s.query(SaleToken).filter_by(key=token_key).first()
 
@@ -171,6 +185,7 @@ def load_sale_token(token_info, s):
         sale_token.news_count = detail_token_news_count
         sale_token.watchlists_count = detail_token_watchlists_count
         sale_token.has_tickers = detail_token_has_tickers
+        sale_token.tags = detail_token_tags
     else:
         sale_token = SaleToken(
             status=detail_token_status,
@@ -207,17 +222,18 @@ def load_sale_token(token_info, s):
             news_count=detail_token_news_count,
             watchlists_count=detail_token_watchlists_count,
             has_tickers=detail_token_has_tickers,
+            tags=detail_token_tags,
         )
         s.add(sale_token)
         s.commit()
 
     download_image(detail_token_image, token_key)
 
-    return sale_token, detail_token_info
+    return sale_token, detail_token
 
 
-def load_launchpads(token_info, s, sale_token):
-    launchpads_data = get_value(token_info, "launchpads")
+def load_launchpads(token, s, sale_token):
+    launchpads_data = get_value(token, "launchpads")
     for launchpads_item in launchpads_data:
         if launchpads_item:
             launchpad_key = get_value(launchpads_item, "key")
@@ -257,8 +273,8 @@ def load_launchpads(token_info, s, sale_token):
             return launchpad
 
 
-def load_funds(token_info, s, sale_token):
-    funds_data = get_value(token_info, "funds")
+def load_funds(token, s, sale_token):
+    funds_data = get_value(token, "funds")
     for funds_item in funds_data:
         if funds_item:
             fund_key = get_value(funds_item, "key")
@@ -300,8 +316,8 @@ def load_funds(token_info, s, sale_token):
             return fund
 
 
-def load_blockchains(token_info, s, sale_token):
-    blockchains_data = get_value(token_info, "blockchains")
+def load_blockchains(token, s, sale_token):
+    blockchains_data = get_value(token, "blockchains")
     for blockchain_item in blockchains_data:
         if blockchain_item:
             blockchain_key = get_value(blockchain_item, "key")
@@ -337,42 +353,43 @@ def load_blockchains(token_info, s, sale_token):
             return blockchain
 
 
-def load_tags(token_info, s, sale_token):
-    tags_data = get_value(token_info, "tags")
-    for tag_item in tags_data:
-        if tag_item:
-            tag_key = get_value(tag_item, "key")
-            tag_name = get_value(tag_item, "name")
+def load_tags(token, s, sale_token):
+    pass
+    # tags_data = get_value(token, "tags")
+    # for tag_item in tags_data:
+    #     if tag_item:
+    #         tag_key = get_value(tag_item, "key")
+    #         tag_name = get_value(tag_item, "name")
+    #
+    #         tag = s.query(Tag).filter_by(key=tag_key).first()
+    #         if tag:
+    #             tag.key = tag_key
+    #             tag.name = tag_name
+    #         else:
+    #             tag = Tag(key=tag_key, name=tag_name)
+    #             s.add(tag)
+    #             s.commit()
+    #
+    #         sale_token_tag = (
+    #             s.query(SaleTokenTag)
+    #             .filter_by(sale_token_id=sale_token.id, tag_id=tag.id)
+    #             .first()
+    #         )
+    #         if sale_token_tag:
+    #             sale_token_tag.sale_token_id = sale_token.id
+    #             sale_token_tag.tag_id = tag.id
+    #         else:
+    #             sale_token_tag = SaleTokenTag(
+    #                 sale_token_id=sale_token.id, tag_id=tag.id
+    #             )
+    #             s.add(sale_token_tag)
+    #             s.commit()
+    #
+    #         return tag
 
-            tag = s.query(Tag).filter_by(key=tag_key).first()
-            if tag:
-                tag.key = tag_key
-                tag.name = tag_name
-            else:
-                tag = Tag(key=tag_key, name=tag_name)
-                s.add(tag)
-                s.commit()
 
-            sale_token_tag = (
-                s.query(SaleTokenTag)
-                .filter_by(sale_token_id=sale_token.id, tag_id=tag.id)
-                .first()
-            )
-            if sale_token_tag:
-                sale_token_tag.sale_token_id = sale_token.id
-                sale_token_tag.tag_id = tag.id
-            else:
-                sale_token_tag = SaleTokenTag(
-                    sale_token_id=sale_token.id, tag_id=tag.id
-                )
-                s.add(sale_token_tag)
-                s.commit()
-
-            return tag
-
-
-def load_crowdsales(s, sale_token, detail_token_info):
-    crowdsales_data = get_value(detail_token_info, "crowdsales")
+def load_crowdsales(s, sale_token, detail_token):
+    crowdsales_data = get_value(detail_token, "crowdsales")
     for crowdsale_item in crowdsales_data:
         if crowdsale_item:
             crowdsale_id = get_value(crowdsale_item, "id")
@@ -454,13 +471,13 @@ def load_data(page):
     session = create_session()
     s = session()
 
-    for token_info in page:
-        sale_token, detail_token_info = load_sale_token(token_info, s)
-        launchpad = load_launchpads(token_info, s, sale_token)
-        fund = load_funds(token_info, s, sale_token)
-        blockchain = load_blockchains(token_info, s, sale_token)
-        tag = load_tags(token_info, s, sale_token)
-        crowdsale = load_crowdsales(s, sale_token, detail_token_info)
+    for token in page:
+        sale_token, detail_token = load_sale_token(token, s)
+        load_launchpads(token, s, sale_token)
+        load_funds(token, s, sale_token)
+        load_blockchains(token, s, sale_token)
+        # tag = load_tags(token, s, sale_token)
+        load_crowdsales(s, sale_token, detail_token)
 
 
 def main():

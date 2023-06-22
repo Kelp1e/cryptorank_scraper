@@ -1,4 +1,15 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, BIGINT, Text
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+    Float,
+    ForeignKey,
+    BIGINT,
+    Text,
+    Date,
+)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import declarative_base, relationship
 
 from db.setup import get_engine
@@ -19,12 +30,13 @@ class SaleToken(Base):
     category = Column(String)
     initial_cap = Column(BIGINT)
     raise_amount = Column(BIGINT)
-    till = Column(String)
+    till = Column(Date)
     total_raise = Column(BIGINT)
     roi = Column(Float)
     ath_roi = Column(Float)
     sale_price = Column(Float)
     price = Column(Float)
+    tags = Column(JSONB)
 
     has_funding_rounds = Column(Boolean)
     type = Column(String)
@@ -39,8 +51,8 @@ class SaleToken(Base):
     exist_on_tv = Column(Boolean)
     description = Column(Text)
     short_description = Column(Text)
-    history_start_day = Column(String)
-    history_end_day = Column(String)
+    history_start_day = Column(Date)
+    history_end_day = Column(Date)
     tickers_count = Column(Integer)
     exchanges_count = Column(Integer)
     news_count = Column(Integer)
@@ -59,7 +71,7 @@ class SaleToken(Base):
         "Blockchain", secondary="sale_token_blockchain", back_populates="sale_tokens"
     )
 
-    tags = relationship("Tag", secondary="sale_token_tag", back_populates="sale_tokens")
+    # tags = relationship("Tag", secondary="sale_token_tag", back_populates="sale_tokens")
 
     crowdsales = relationship(
         "Crowdsale", secondary="sale_token_crowdsale", back_populates="sale_tokens"
@@ -125,23 +137,24 @@ class SaleTokenBlockchain(Base):
     blockchain_id = Column(Integer, ForeignKey("blockchains.id"), primary_key=True)
 
 
-class Tag(Base):
-    __tablename__ = "tags"
-
-    id = Column(Integer, primary_key=True)
-    key = Column(String)
-    name = Column(String)
-
-    sale_tokens = relationship(
-        "SaleToken", secondary="sale_token_tag", back_populates="tags"
-    )
-
-
-class SaleTokenTag(Base):
-    __tablename__ = "sale_token_tag"
-
-    sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
-    tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
+# class Tag(Base):
+#     __tablename__ = "tags"
+#
+#     id = Column(Integer, primary_key=True)
+#     key = Column(String)
+#     name = Column(String)
+#
+#     sale_tokens = relationship(
+#         "SaleToken", secondary="sale_token_tag", back_populates="tags"
+#     )
+#
+#
+# class SaleTokenTag(Base):
+#     __tablename__ = "sale_token_tag"
+#
+#     sale_token_id = Column(Integer, ForeignKey("sale_tokens.id"), primary_key=True)
+#     tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
+#
 
 
 class Crowdsale(Base):
@@ -149,8 +162,8 @@ class Crowdsale(Base):
 
     id = Column(Integer, primary_key=True)
     type = Column(String)
-    start = Column(String)
-    end = Column(String)
+    start = Column(Date)
+    end = Column(Date)
     show_only_month = Column(Boolean)
     priority_rating = Column(Integer)
     tokens_for_sale = Column(BIGINT)
