@@ -14,6 +14,8 @@ from db.models import (
     SaleTokenBlockchain,
     Tag,
     SaleTokenTag,
+    Crowdsale,
+    SaleTokenCrowdsale,
 )
 from db.setup import create_session
 from request_data import headers, json_data
@@ -101,10 +103,16 @@ def load_data(page):
         detail_token_fully_diluted_market_cap = get_value(
             detail_token_info, "fullyDilutedMarketCap"
         )
-        detail_token_initial_market_cap = get_value(detail_token_info, "initialMarketCap")
+        detail_token_initial_market_cap = get_value(
+            detail_token_info, "initialMarketCap"
+        )
         detail_token_exist_on_tv = get_value(detail_token_info, "existsOnTv")
         detail_token_description = get_value(detail_token_info, "description")
-        detail_token_short_description = get_value(detail_token_info, "shortDescription")
+        detail_token_short_description = get_value(
+            detail_token_info, "shortDescription"
+        )
+        detail_token_history_start_day = get_value(detail_token_info, "historyStartDay")
+        detail_token_history_end_day = get_value(detail_token_info, "historyEndDay")
         detail_token_tickers_count = get_value(detail_token_info, "tickersCount")
         detail_token_exchanges_count = get_value(detail_token_info, "exchangesCount")
         detail_token_news_count = get_value(detail_token_info, "newsCount")
@@ -151,11 +159,15 @@ def load_data(page):
             sale_token.unlimited_supply = detail_token_unlimited_supply
             sale_token.total_supply = detail_token_total_supply
             sale_token.is_traded = detail_token_is_traded
-            sale_token.ico_fully_diluted_market_cap = detail_token_ico_fully_diluted_market_cap
+            sale_token.ico_fully_diluted_market_cap = (
+                detail_token_ico_fully_diluted_market_cap
+            )
             sale_token.fully_diluted_market_cap = detail_token_fully_diluted_market_cap
             sale_token.exist_on_tv = detail_token_exist_on_tv
             sale_token.description = detail_token_description
             sale_token.short_description = detail_token_short_description
+            sale_token.history_start_day = detail_token_history_start_day
+            sale_token.history_end_day = detail_token_history_end_day
             sale_token.tickers_count = detail_token_tickers_count
             sale_token.exchanges_count = detail_token_exchanges_count
             sale_token.news_count = detail_token_news_count
@@ -191,6 +203,8 @@ def load_data(page):
                 exist_on_tv=detail_token_exist_on_tv,
                 description=detail_token_description,
                 short_description=detail_token_short_description,
+                history_start_day=detail_token_history_start_day,
+                history_end_day=detail_token_history_end_day,
                 tickers_count=detail_token_tickers_count,
                 exchanges_count=detail_token_exchanges_count,
                 news_count=detail_token_news_count,
@@ -339,6 +353,84 @@ def load_data(page):
                         sale_token_id=sale_token.id, tag_id=tag.id
                     )
                     s.add(sale_token_tag)
+                    s.commit()
+
+        crowdsales_data = get_value(detail_token_info, "crowdsales")
+        for crowdsale_item in crowdsales_data:
+            if crowdsale_item:
+                crowdsale_id = get_value(crowdsale_item, "id")
+                crowdsale_type = get_value(crowdsale_item, "type")
+                crowdsale_start = get_value(crowdsale_item, "start")
+                crowdsale_end = get_value(crowdsale_item, "end")
+                crowdsale_show_only_month = get_value(crowdsale_item, "showOnlyMonth")
+                crowdsale_priority_rating = get_value(crowdsale_item, "priorityRating")
+                crowdsale_tokens_for_sale = get_value(crowdsale_item, "tokensForSale")
+                crowdsale_lockup_period = get_value(crowdsale_item, "lockupPeriod")
+                crowdsale_status = get_value(crowdsale_item, "status")
+                crowdsale_is_calculate_roi_table = get_value(
+                    crowdsale_item, "isCalculateRoiTable"
+                )
+                crowdsale_is_sponsored = get_value(crowdsale_item, "isSponsored")
+                crowdsale_ido_platform_key = get_value(crowdsale_item, "idoPlatformKey")
+                crowdsale_price = get_value(get_value(crowdsale_item, "price"), "USD")
+                crowdsale_raise_amount = get_value(
+                    get_value(crowdsale_item, "raise"), "USD"
+                )
+                crowdsale_is_closed = get_value(crowdsale_item, "isClosed")
+
+                crowdsale = s.query(Crowdsale).filter_by(id=crowdsale_id).first()
+                if crowdsale:
+                    crowdsale.type = crowdsale_type
+                    crowdsale.start = crowdsale_start
+                    crowdsale.end = crowdsale_end
+                    crowdsale.show_only_month = crowdsale_show_only_month
+                    crowdsale.priority_rating = crowdsale_priority_rating
+                    crowdsale.tokens_for_sale = crowdsale_tokens_for_sale
+                    crowdsale.lockup_period = crowdsale_lockup_period
+                    crowdsale.status = crowdsale_status
+                    crowdsale.is_calculate_roi_table = crowdsale_is_calculate_roi_table
+                    crowdsale.is_sponsored = crowdsale_is_sponsored
+                    crowdsale.ido_platform_key = crowdsale_ido_platform_key
+                    crowdsale.price = crowdsale_price
+                    crowdsale.raise_amount = crowdsale_raise_amount
+                    crowdsale.is_closed = crowdsale_is_closed
+                else:
+                    crowdsale = Crowdsale(
+                        id=crowdsale_id,
+                        type=crowdsale_type,
+                        start=crowdsale_start,
+                        end=crowdsale_end,
+                        show_only_month=crowdsale_show_only_month,
+                        priority_rating=crowdsale_priority_rating,
+                        tokens_for_sale=crowdsale_tokens_for_sale,
+                        lockup_period=crowdsale_lockup_period,
+                        status=crowdsale_status,
+                        is_calculate_roi_table=crowdsale_is_calculate_roi_table,
+                        is_sponsored=crowdsale_is_sponsored,
+                        ido_platform_key=crowdsale_ido_platform_key,
+                        price=crowdsale_price,
+                        raise_amount=crowdsale_raise_amount,
+                        is_closed=crowdsale_is_closed,
+                    )
+                    s.add(crowdsale)
+                    s.commit()
+
+                sale_token_crowdsale = (
+                    s.query(SaleTokenCrowdsale)
+                    .filter_by(
+                        sale_token_id=sale_token.id, crowdsale_id=crowdsale.id
+                    )
+                    .first()
+                )
+                if sale_token_crowdsale:
+                    sale_token_crowdsale.sale_token_id = sale_token.id
+                    sale_token_crowdsale.crowdsale_id = crowdsale.id
+                else:
+                    sale_token_crowdsale = SaleTokenCrowdsale(
+                        sale_token_id=sale_token.id,
+                        crowdsale_id=crowdsale.id
+                    )
+                    s.add(sale_token_crowdsale)
                     s.commit()
 
 

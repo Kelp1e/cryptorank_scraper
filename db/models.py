@@ -42,6 +42,8 @@ class SaleToken(Base):
     exist_on_tv = Column(Boolean)
     description = Column(Text)
     short_description = Column(Text)
+    history_start_day = Column(String)
+    history_end_day = Column(String)
     tickers_count = Column(Integer)
     exchanges_count = Column(Integer)
     news_count = Column(Integer)
@@ -162,9 +164,10 @@ class Crowdsale(Base):
     status = Column(String)
     is_calculate_roi_table = Column(Boolean)
     is_sponsored = Column(Boolean)
-    ido_platform_key = Column(Boolean)
+    ido_platform_key = Column(String)
     price = Column(Float)
     raise_amount = Column(BIGINT)
+    is_closed = Column(Boolean)
 
     sale_tokens = relationship(
         "SaleToken", secondary="sale_token_crowdsale", back_populates="crowdsales"
